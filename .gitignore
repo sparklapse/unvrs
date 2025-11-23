@@ -1,0 +1,11 @@
+# Zig
+.zig-cache/
+zig-out/
+deps/
+
+# clang
+.cache/
+compile_commands.json
+
+# MacOS
+.DS_Store

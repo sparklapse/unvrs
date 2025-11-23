@@ -1,0 +1,16 @@
+.{
+    .name = .unvrs,
+    .version = "0.0.0",
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .bundle = .{ .path = "./packages/bundle" },
+        .core = .{ .path = "./packages/core" },
+        .webview = .{ .path = "./packages/webview" },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "packages",
+    },
+    .fingerprint = 0xa89037822a75816f,
+}

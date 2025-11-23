@@ -1,0 +1,10 @@
+.{
+    .name = .compile_commands,
+    .version = "0.0.1",
+    .minimum_zig_version = "0.15.2",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+    },
+    .fingerprint = 0xe15ba818a4bd7b00,
+}

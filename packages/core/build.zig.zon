@@ -1,0 +1,21 @@
+.{
+    .name = .core,
+    .version = "0.0.0",
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .callback = .{
+            .path = "../callback",
+        },
+        .headers = .{
+            .path = "../headers",
+        },
+        .compile_commands = .{
+            .path = "../compile_commands",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+    },
+    .fingerprint = 0x6b8d854fda53adb6,
+}

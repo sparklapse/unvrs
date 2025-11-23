@@ -1,0 +1,21 @@
+.{
+    .name = .webview,
+    .version = "0.0.1",
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .bundle = .{
+            .path = "../../packages/bundle",
+        },
+        .core = .{
+            .path = "../../packages/core",
+        },
+        .webview = .{
+            .path = "../../packages/webview",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+    },
+    .fingerprint = 0xd0d1ff8d2afac839,
+}
