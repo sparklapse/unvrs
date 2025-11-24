@@ -9,6 +9,7 @@ const WebView = @This();
 pub const u_webview_t = opaque {
     pub extern fn u_webview_create(view: *View.u_view_t, width: i32, height: i32, url: [*:0]const u8) *u_webview_t;
     pub extern fn u_webview_delete(self: *u_webview_t) void;
+    pub extern fn u_webview_run_js(self: *u_webview_t, js: [*]const u8, length: usize) void;
     pub extern fn u_webview_open_dev_tools(self: *u_webview_t) void;
     pub extern fn u_webview_close_dev_tools(self: *u_webview_t) void;
 };
@@ -38,6 +39,10 @@ pub fn init(options: WebViewOptions) WebView {
 
 pub fn free(self: *WebView) void {
     self.u_webview.u_webview_delete();
+}
+
+pub fn runJs(self: *WebView, js: []const u8) void {
+    self.u_webview.u_webview_run_js(js.ptr, js.len);
 }
 
 /// The first time calling this will create the window to place dev tools into

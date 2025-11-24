@@ -38,6 +38,16 @@ void u_webview_delete(u_webview_t self) {
   browser->Release();
 }
 
+void u_webview_run_js(u_webview_t self, uint8_t *js, size_t length) {
+  // CEF_REQUIRE_UI_THREAD();
+
+  CefStringUTF8 script;
+  script.FromString(reinterpret_cast<char*>(js), length, false);
+  CefBrowser *browser = static_cast<CefBrowser *>(self);
+  CefRefPtr<CefFrame> frame = browser->GetMainFrame();
+  frame->ExecuteJavaScript(script.ToString(), frame->GetURL(), 0);
+}
+
 void u_webview_open_dev_tools(u_webview_t self) {
   CEF_REQUIRE_UI_THREAD();
 
