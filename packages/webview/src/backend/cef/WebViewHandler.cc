@@ -58,10 +58,6 @@ void WebViewHandler::OnTitleChange(CefRefPtr<CefBrowser> browser,
 void WebViewHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
 
-  // Sanity-check the configured runtime style.
-  CHECK_EQ(is_alloy_style_ ? CEF_RUNTIME_STYLE_ALLOY : CEF_RUNTIME_STYLE_CHROME,
-           browser->GetHost()->GetRuntimeStyle());
-
   // Add to the list of existing browsers.
   browser_list_.push_back(browser);
 }

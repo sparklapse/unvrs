@@ -7,9 +7,11 @@ const Window = @This();
 
 pub const u_window_t = opaque {
     pub extern fn u_window_create(x: f64, y: f64, width: f64, height: f64) *u_window_t;
+    pub extern fn u_window_delete(self: *u_window_t) void;
     pub extern fn u_window_is_visible(self: *u_window_t) bool;
     pub extern fn u_window_set_visible(self: *u_window_t, visible: bool) void;
     pub extern fn u_window_set_background_color(self: *u_window_t, r: u8, g: u8, b: u8, a: u8) void;
+    pub extern fn u_window_get_root_view(self: *u_window_t) *View.u_view_t;
     pub extern fn u_window_add_view(self: *u_window_t, view: *View.u_view_t) void;
 };
 
@@ -36,7 +38,7 @@ pub fn init(options: WindowOptions) Window {
 }
 
 pub fn free(self: *Window) void {
-    _ = self;
+    self.u_window.u_window_delete();
 }
 
 pub fn isVisible(self: *Window) bool {

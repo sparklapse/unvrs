@@ -36,11 +36,16 @@ u_window_t u_window_create(double_t x, double_t y, double_t width,
   [win setCanHide:YES];
 
   NSView *root = [[UView alloc] init];
-  // root.translatesAutoresizingMaskIntoConstraints = NO;
   [win setContentView:root];
   [win makeFirstResponder:root];
 
   return win;
+}
+
+void u_window_delete(u_window_t self) {
+  UWindow *win = static_cast<UWindow *>(self);
+  [win close];
+  [win release];
 }
 
 bool u_window_is_visible(u_window_t self) {
@@ -60,6 +65,13 @@ void u_window_set_background_color(u_window_t self, uint8_t r, uint8_t g, uint8_
                                      blue:(CGFloat)b/255
                                     alpha:(CGFloat)a/255];
   [win setBackgroundColor:bg];
+}
+
+u_view_t u_window_get_root_view(u_window_t self) {
+  UWindow *win = static_cast<UWindow *>(self);
+  NSView *root = win.contentView;
+
+  return root;
 }
 
 void u_window_add_view(u_window_t self, u_view_t view_ptr) {
