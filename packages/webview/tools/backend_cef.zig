@@ -5,7 +5,12 @@ pub const CefBackend = struct {
     headers: std.Build.LazyPath,
     wrapper_obj: std.Build.LazyPath,
 
-    pub fn link(self: CefBackend, module: *std.Build.Module) void {
+    pub const LinkOptions = struct {
+        should_extend_app: bool = true,
+    };
+
+    /// Link the context and handlers for CEF
+    pub fn link(self: CefBackend, module: *std.Build.Module, options: LinkOptions) void {
         module.addIncludePath(self.headers);
         module.addIncludePath(module.owner.path("src/backend/cef"));
 
@@ -21,9 +26,15 @@ pub const CefBackend = struct {
 
         switch (self.target.result.os.tag) {
             .macos => {
+                if (options.should_extend_app) {
+                    module.addCSourceFile(.{
+                        .file = module.owner.path("src/backend/cef/platform/macos/App.mm"),
+                        .language = .objective_cpp,
+                        .flags = &.{"-std=c++17"},
+                    });
+                }
                 module.addCSourceFiles(.{
                     .files = &.{
-                        "src/backend/cef/platform/macos/App.mm",
                         "src/backend/cef/platform/macos/WebViewApp.mm",
                         "src/backend/cef/platform/macos/WebViewHandler.mm",
                     },
@@ -45,7 +56,17 @@ pub const CefBackend = struct {
     }
 };
 
-pub fn build(b: *std.Build, target: std.Build.ResolvedTarget) CefBackend {
+pub const CefBuildOptions = struct {
+    target: std.Build.ResolvedTarget,
+    context_lib: *std.Build.Step.Compile,
+    webview_headers: std.Build.LazyPath,
+};
+
+pub fn build(b: *std.Build, options: CefBuildOptions) CefBackend {
+    const target = options.target;
+    const context_lib = options.context_lib;
+    const webview_headers = options.webview_headers;
+
     const cef_dep_label = b.fmt(
         "cef_{s}_{s}",
         .{
@@ -86,13 +107,9 @@ pub fn build(b: *std.Build, target: std.Build.ResolvedTarget) CefBackend {
                 },
                 .language = .cpp,
             });
-            helper_mod.addObjectFile(cef_wrapper_obj);
-            helper_mod.addIncludePath(cef_headers.getDirectory());
-
-            // TODO: Get this from the pipe output of PRINT_CEF_CONFIG from the cmake command
-            helper_mod.addCMacro("__STDC_CONSTANT_MACROS", "1");
-            helper_mod.addCMacro("__STDC_FORMAT_MACROS", "1");
-            helper_mod.addCMacro("CEF_USE_SANDBOX", "1");
+            helper_mod.addIncludePath(webview_headers);
+            cef_backend.link(helper_mod, .{ .should_extend_app = false });
+            helper_mod.linkLibrary(context_lib);
 
             const helper_exe = b.addExecutable(.{
                 .name = "cef_helper",

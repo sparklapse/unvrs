@@ -1,3 +1,4 @@
+#include <string>
 #include <webview.h>
 
 #include "include/cef_browser.h"
@@ -6,7 +7,7 @@
 #include "WebViewHandler.h"
 
 u_webview_t u_webview_create(u_view_t view, int32_t width, int32_t height,
-                             uint8_t *url) {
+                             uint8_t *url, size_t url_length) {
   CEF_REQUIRE_UI_THREAD();
 
   // SimpleHandler implements browser-level callbacks.
@@ -16,7 +17,7 @@ u_webview_t u_webview_create(u_view_t view, int32_t width, int32_t height,
   CefBrowserSettings browser_settings;
   browser_settings.background_color = CefColorSetARGB(255, 0, 0, 0);
 
-  std::string url_str(reinterpret_cast<char *>(url));
+  std::string url_str(reinterpret_cast<char *>(url), url_length);
 
   CefWindowInfo window_info;
   window_info.SetAsChild(view, CefRect(0, 0, width, height));
@@ -38,14 +39,12 @@ void u_webview_delete(u_webview_t self) {
   browser->Release();
 }
 
-void u_webview_run_js(u_webview_t self, uint8_t *js, size_t length) {
-  // CEF_REQUIRE_UI_THREAD();
-
-  CefStringUTF8 script;
-  script.FromString(reinterpret_cast<char*>(js), length, false);
+void u_webview_run_js(u_webview_t self, uint8_t *js, size_t js_length) {
   CefBrowser *browser = static_cast<CefBrowser *>(self);
   CefRefPtr<CefFrame> frame = browser->GetMainFrame();
-  frame->ExecuteJavaScript(script.ToString(), frame->GetURL(), 0);
+  std::string script(reinterpret_cast<char *>(js), js_length);
+
+  frame->ExecuteJavaScript(script, frame->GetURL(), 0);
 }
 
 void u_webview_open_dev_tools(u_webview_t self) {
@@ -54,7 +53,7 @@ void u_webview_open_dev_tools(u_webview_t self) {
   CefBrowser *browser = static_cast<CefBrowser *>(self);
 
   CefBrowserSettings browser_settings;
-  browser_settings.background_color = CefColorSetARGB(255, 255, 255, 0);
+  browser_settings.background_color = CefColorSetARGB(0, 0, 0, 0);
 
   CefWindowInfo window_info;
 

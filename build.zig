@@ -13,6 +13,11 @@ const UnvrsCore = struct {
 const UnvrsWebview = struct {
     dep: *std.Build.Dependency,
     mod: *std.Build.Module,
+    context_mod: *std.Build.Module,
+
+    pub fn linkContext(self: UnvrsWebview, mod: *std.Build.Module) void {
+        mod.linkLibrary(self.dep.artifact("webview_context"));
+    }
 
     pub fn bundleAddon(self: UnvrsWebview, bun: bundler.Bundle) void {
         const webview = @import("webview");
@@ -37,10 +42,12 @@ const Unvrs = struct {
     pub fn webview(self: Unvrs, args: anytype) UnvrsWebview {
         const dep = self.dependency.builder.dependency("webview", args);
         const mod = dep.module("webview");
+        const context_mod = dep.module("webview_context");
 
         return .{
             .dep = dep,
             .mod = mod,
+            .context_mod = context_mod,
         };
     }
 

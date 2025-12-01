@@ -16,16 +16,43 @@ pub const Backend = enum {
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
 
+    // Dependencies
     const core_dep = b.dependency("core", .{});
     const headers_dep = b.dependency("headers", .{});
 
+    // Context binding
+    const context_root_opt = b.option(std.Build.LazyPath, "context_root", "a custom context to use for the web engine") orelse b.path("src/context/default_context.zig");
+
+    const context_mod = b.addModule("webview_context", .{
+        .root_source_file = context_root_opt,
+    });
+
+    const context_lib_mod = b.createModule(.{
+        .root_source_file = b.path("src/context/module.zig"),
+        .target = target,
+        .imports = &.{
+            .{ .name = "context", .module = context_mod },
+        },
+    });
+
+    const context_lib = b.addLibrary(.{
+        .name = "webview_context",
+        .root_module = context_lib_mod,
+        .linkage = .static,
+    });
+
+    b.installArtifact(context_lib);
+
+    // WebView Module
     const webview_mod = b.addModule("webview", .{
         .root_source_file = b.path("src/module.zig"),
         .imports = &.{
             .{ .name = "core", .module = core_dep.module("core") },
+            .{ .name = "context_binding", .module = context_lib_mod },
         },
         .link_libcpp = true,
     });
+
     const webview_headers = headers.generate(headers_dep.builder, .{
         .name = "webview",
         .root_source_file = webview_mod.root_source_file.?,
@@ -36,13 +63,19 @@ pub fn build(b: *std.Build) void {
     webview_mod.addIncludePath(b.path("src"));
     webview_mod.addIncludePath(core_dep.path("src"));
 
+    // Backend config
     const backend_opt = b.option(Backend, "backend", "what browser backend to use") orelse .cef;
     const backend = switch (backend_opt) {
-        .cef => cef_backend.build(b, target),
+        .cef => cef_backend.build(b, .{
+            .target = target,
+            .context_lib = context_lib,
+            .webview_headers = webview_headers,
+        }),
         .webkit => @panic("Not implemented"),
     };
-    backend.link(webview_mod);
+    backend.link(webview_mod, .{});
 
+    // Compile commands
     const cc_gen = compile_commands.generate(b, webview_mod);
     b.default_step.dependOn(&cc_gen.step);
 }

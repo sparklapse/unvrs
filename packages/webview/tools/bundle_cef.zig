@@ -8,6 +8,8 @@ const CEF_HELPER_VARIANTS: []const []const u8 = &.{
     "Renderer",
 };
 
+pub const BundleOptions = struct {};
+
 pub fn bundleAddon(webview_dep: *std.Build.Dependency, bun: bundle.Bundle) void {
     const b = webview_dep.builder;
 

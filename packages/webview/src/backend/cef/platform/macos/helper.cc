@@ -1,11 +1,12 @@
 #include "include/cef_app.h"
 #include "include/wrapper/cef_library_loader.h"
+#include <WebViewApp.h>
 
 #if defined(CEF_USE_SANDBOX)
 #include "include/cef_sandbox_mac.h"
 #endif
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 #if defined(CEF_USE_SANDBOX)
   CefScopedSandboxContext sandbox_context;
   if (!sandbox_context.Initialize(argc, argv))
@@ -18,6 +19,8 @@ int main(int argc, char* argv[]) {
 
   CefMainArgs main_args(argc, argv);
 
+  CefRefPtr<WebViewApp> webview_app(new WebViewApp);
+
   // Execute the sub-process.
-  return CefExecuteProcess(main_args, nullptr, nullptr);
+  return CefExecuteProcess(main_args, webview_app, nullptr);
 }

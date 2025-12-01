@@ -2,28 +2,32 @@
 #define UNVRS_WEBVIEW_APP_H
 
 #include "include/cef_app.h"
+#include "include/cef_render_process_handler.h"
 
-// Implement application-level callbacks for the browser process.
-class WebViewApp : public CefApp, public CefBrowserProcessHandler {
- public:
+class WebViewApp : public CefApp,
+                   public CefBrowserProcessHandler,
+                   public CefRenderProcessHandler {
+public:
   WebViewApp();
 
-  // CefApp methods:
+  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
+
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
     return this;
   }
 
-  // CefBrowserProcessHandler methods:
-
   void OnBeforeCommandLineProcessing(
-      const CefString& process_type,
+      const CefString &process_type,
       CefRefPtr<CefCommandLine> command_line) override;
   void OnContextInitialized() override;
   CefRefPtr<CefClient> GetDefaultClient() override;
 
- private:
-  // Include the default reference counting implementation.
+  CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
+      return this;
+  }
+private:
   IMPLEMENT_REFCOUNTING(WebViewApp);
+  DISALLOW_COPY_AND_ASSIGN(WebViewApp);
 };
 
-#endif  // UNVRS_WEBVIEW_APP_H
+#endif // UNVRS_WEBVIEW_APP_H
