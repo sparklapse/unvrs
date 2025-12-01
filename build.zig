@@ -15,10 +15,16 @@ const UnvrsWebview = struct {
     mod: *std.Build.Module,
     context_mod: *std.Build.Module,
 
+    /// Link the context handlers to your main application module
+    /// The webview context allows you to hook into callbacks run in sandboxed
+    /// processes (such as during js initialization).
     pub fn linkContext(self: UnvrsWebview, mod: *std.Build.Module) void {
         mod.linkLibrary(self.dep.artifact("webview_context"));
     }
 
+    /// This bundles and automates copying all the WebView dependencies into a
+    /// unvrs app bundle. This is especially handy on macos as it needs a lot
+    /// of resource files in odd places.
     pub fn bundleAddon(self: UnvrsWebview, bun: bundler.Bundle) void {
         const webview = @import("webview");
         webview.bundleAddon(self.dep, bun);
@@ -56,6 +62,7 @@ const Unvrs = struct {
     }
 };
 
+/// Use the unvrs in your build process for making an application
 pub fn use(b: *std.Build) *Unvrs {
     const unvrs = b.allocator.create(Unvrs) catch @panic("OOM");
     const unvrs_dep = b.dependency("unvrs", .{});
