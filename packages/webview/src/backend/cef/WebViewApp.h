@@ -9,22 +9,32 @@ class WebViewApp : public CefApp,
                    public CefRenderProcessHandler {
 public:
   WebViewApp();
+  CefRefPtr<CefClient> GetDefaultClient() override;
 
-  bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefProcessId source_process, CefRefPtr<CefProcessMessage> message) override;
+  // bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+  //                               CefRefPtr<CefFrame> frame,
+  //                               CefProcessId source_process,
+  //                               CefRefPtr<CefProcessMessage> message)
+  //                               override;
 
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
+    return this;
+  }
+
+  CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
     return this;
   }
 
   void OnBeforeCommandLineProcessing(
       const CefString &process_type,
       CefRefPtr<CefCommandLine> command_line) override;
-  void OnContextInitialized() override;
-  CefRefPtr<CefClient> GetDefaultClient() override;
 
-  CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override {
-      return this;
-  }
+  void OnContextInitialized() override;
+
+  void OnContextCreated(CefRefPtr<CefBrowser> browser,
+                        CefRefPtr<CefFrame> frame,
+                        CefRefPtr<CefV8Context> context) override;
+
 private:
   IMPLEMENT_REFCOUNTING(WebViewApp);
   DISALLOW_COPY_AND_ASSIGN(WebViewApp);

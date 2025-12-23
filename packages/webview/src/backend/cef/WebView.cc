@@ -10,10 +10,8 @@ u_webview_t u_webview_create(u_view_t view, int32_t width, int32_t height,
                              uint8_t *url, size_t url_length) {
   CEF_REQUIRE_UI_THREAD();
 
-  // SimpleHandler implements browser-level callbacks.
   CefRefPtr<WebViewHandler> handler(WebViewHandler::GetInstance());
 
-  // Specify CEF browser settings here.
   CefBrowserSettings browser_settings;
   browser_settings.background_color = CefColorSetARGB(255, 0, 0, 0);
 
@@ -40,6 +38,8 @@ void u_webview_delete(u_webview_t self) {
 }
 
 void u_webview_run_js(u_webview_t self, uint8_t *js, size_t js_length) {
+  CEF_REQUIRE_UI_THREAD();
+
   CefBrowser *browser = static_cast<CefBrowser *>(self);
   CefRefPtr<CefFrame> frame = browser->GetMainFrame();
   std::string script(reinterpret_cast<char *>(js), js_length);

@@ -1,12 +1,14 @@
 #include <WebViewApp.h>
 #include <WebViewHandler.h>
 #include <loop/platform/macos/App.h>
+#include <string>
 #include <webview.h>
 
 #include <objc/runtime.h>
 
 #include "include/cef_app.h"
 #include "include/cef_application_mac.h"
+#include "include/internal/cef_string.h"
 #include "include/wrapper/cef_helpers.h"
 #include "include/wrapper/cef_library_loader.h"
 
@@ -31,6 +33,9 @@
   settings.windowless_rendering_enabled = true;
   // TODO: get some option from zig build to toggle this
   settings.no_sandbox = true;
+  u_root_cache_path_t root_cache_path = u_get_root_cache_path();
+  CefString(&settings.root_cache_path) = std::string(
+      reinterpret_cast<char *>(root_cache_path.ptr), root_cache_path.len);
 
   CefRefPtr<WebViewApp> webview_app(new WebViewApp);
 

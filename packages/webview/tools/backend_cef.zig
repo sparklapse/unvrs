@@ -16,9 +16,9 @@ pub const CefBackend = struct {
 
         module.addCSourceFiles(.{
             .files = &.{
-                "src/backend/cef/WebView.cc",
                 "src/backend/cef/WebViewApp.cc",
                 "src/backend/cef/WebViewHandler.cc",
+                "src/backend/cef/context.cc",
             },
             .language = .cpp,
             .flags = &.{"-std=c++17"},
@@ -58,13 +58,17 @@ pub const CefBackend = struct {
 
 pub const CefBuildOptions = struct {
     target: std.Build.ResolvedTarget,
-    context_lib: *std.Build.Step.Compile,
+    optimize : std.builtin.OptimizeMode,
+    webview_lib: *std.Build.Step.Compile,
+    webview_mod: *std.Build.Module,
     webview_headers: std.Build.LazyPath,
 };
 
 pub fn build(b: *std.Build, options: CefBuildOptions) CefBackend {
     const target = options.target;
-    const context_lib = options.context_lib;
+    const optimize = options.optimize;
+    const webview_lib = options.webview_lib;
+    const webview_mod = options.webview_mod;
     const webview_headers = options.webview_headers;
 
     const cef_dep_label = b.fmt(
@@ -93,11 +97,20 @@ pub fn build(b: *std.Build, options: CefBuildOptions) CefBackend {
         .wrapper_obj = cef_wrapper_obj,
     };
 
+    webview_mod.addCSourceFile(.{
+        .file = b.path("src/backend/cef/WebView.cc"),
+        .flags = &.{
+            "-std=c++17",
+        },
+        .language = .cpp,
+    });
+    cef_backend.link(webview_mod, .{});
+
     switch (target.result.os.tag) {
         .macos => {
             const helper_mod = b.createModule(.{
                 .target = target,
-                .optimize = .ReleaseFast,
+                .optimize = optimize,
                 .link_libcpp = true,
             });
             helper_mod.addCSourceFile(.{
@@ -108,8 +121,9 @@ pub fn build(b: *std.Build, options: CefBuildOptions) CefBackend {
                 .language = .cpp,
             });
             helper_mod.addIncludePath(webview_headers);
+            helper_mod.linkLibrary(webview_lib);
+
             cef_backend.link(helper_mod, .{ .should_extend_app = false });
-            helper_mod.linkLibrary(context_lib);
 
             const helper_exe = b.addExecutable(.{
                 .name = "cef_helper",

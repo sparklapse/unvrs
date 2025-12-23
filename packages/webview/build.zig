@@ -15,65 +15,84 @@ pub const Backend = enum {
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
     // Dependencies
     const core_dep = b.dependency("core", .{});
     const headers_dep = b.dependency("headers", .{});
 
     // Context binding
-    const context_root_opt = b.option(std.Build.LazyPath, "context_root", "a custom context to use for the web engine") orelse b.path("src/context/default_context.zig");
-
-    const context_mod = b.addModule("webview_context", .{
-        .root_source_file = context_root_opt,
+    const context_types_mod = b.createModule(.{
+        .root_source_file = b.path("src/context/types.zig"),
     });
 
-    const context_lib_mod = b.createModule(.{
-        .root_source_file = b.path("src/context/module.zig"),
-        .target = target,
+    const user_context_root_opt = b.option(std.Build.LazyPath, "context_root", "a custom context to use for the web engine") orelse b.path("src/context/templates/no_context.zig");
+
+    const user_context_mod = b.addModule("webview_user_context", .{
+        .root_source_file = user_context_root_opt,
         .imports = &.{
-            .{ .name = "context", .module = context_mod },
+            .{ .name = "types", .module = context_types_mod },
         },
     });
-
-    const context_lib = b.addLibrary(.{
-        .name = "webview_context",
-        .root_module = context_lib_mod,
-        .linkage = .static,
-    });
-
-    b.installArtifact(context_lib);
 
     // WebView Module
     const webview_mod = b.addModule("webview", .{
         .root_source_file = b.path("src/module.zig"),
         .imports = &.{
             .{ .name = "core", .module = core_dep.module("core") },
-            .{ .name = "context_binding", .module = context_lib_mod },
+            .{ .name = "context_types", .module = context_types_mod },
+            .{ .name = "user_context", .module = user_context_mod },
         },
         .link_libcpp = true,
+        .target = target,
+        .optimize = optimize,
     });
+
+    const webview_lib = b.addLibrary(.{
+        .name = "webview",
+        .root_module = webview_mod,
+        .linkage = .static,
+    });
+
+    b.installArtifact(webview_lib);
 
     const webview_headers = headers.generate(headers_dep.builder, .{
         .name = "webview",
         .root_source_file = webview_mod.root_source_file.?,
-        .imports = headers.importsFromTable(b, webview_mod.import_table),
+        // We have to copy and alter the imports since user context could do
+        // some weird things that break header compilation
+        .imports = &.{
+            .{ .name = "core", .module = core_dep.module("core") },
+            .{ .name = "context_types", .module = context_types_mod },
+            .{ .name = "user_context", .module = b.createModule(.{
+                .root_source_file = b.path("src/context/templates/no_context.zig"),
+            }) },
+        },
     });
 
     webview_mod.addIncludePath(webview_headers);
     webview_mod.addIncludePath(b.path("src"));
     webview_mod.addIncludePath(core_dep.path("src"));
 
+    const webview_headers_inst = b.addInstallDirectory(.{
+        .source_dir = webview_headers,
+        .install_dir = .header,
+        .install_subdir = "",
+    });
+    b.getInstallStep().dependOn(&webview_headers_inst.step);
+
     // Backend config
     const backend_opt = b.option(Backend, "backend", "what browser backend to use") orelse .cef;
-    const backend = switch (backend_opt) {
+    _ = switch (backend_opt) {
         .cef => cef_backend.build(b, .{
             .target = target,
-            .context_lib = context_lib,
+            .optimize = optimize,
+            .webview_lib = webview_lib,
+            .webview_mod = webview_mod,
             .webview_headers = webview_headers,
         }),
         .webkit => @panic("Not implemented"),
     };
-    backend.link(webview_mod, .{});
 
     // Compile commands
     const cc_gen = compile_commands.generate(b, webview_mod);
