@@ -1,5 +1,8 @@
 # WebView
 
+> NOTE: This will eventually be released as a sepereate package but since the core
+> content is still in dev, it's being included for dev speed.
+
 Show web content in your applications.
 
 **Dependencies:**
