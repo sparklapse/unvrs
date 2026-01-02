@@ -7,17 +7,10 @@ const Window = core.window.Window;
 const WebView = @This();
 
 pub const u_webview_t = opaque {
-    pub extern fn u_webview_create(
-        view: *View.u_view_t,
-        width: i32,
-        height: i32,
-        url: [*]const u8,
-        url_length: usize,
-    ) *u_webview_t;
+    pub extern fn u_webview_create(view: *View.u_view_t) *u_webview_t;
     pub extern fn u_webview_delete(self: *u_webview_t) void;
+    pub extern fn u_webview_load_url(self: *u_webview_t, url: [*]const u8, url_length: usize) void;
     pub extern fn u_webview_run_js(self: *u_webview_t, js: [*]const u8, js_length: usize) void;
-    pub extern fn u_webview_open_dev_tools(self: *u_webview_t) void;
-    pub extern fn u_webview_close_dev_tools(self: *u_webview_t) void;
 };
 
 pub const WebViewOptions = struct {
@@ -30,13 +23,9 @@ view: View,
 
 pub fn init(options: WebViewOptions) WebView {
     const view: View = .init(options.view);
-    const u_webview: *u_webview_t = .u_webview_create(
-        view.u_view,
-        @intFromFloat(options.view.width),
-        @intFromFloat(options.view.height),
-        options.start_url.ptr,
-        options.start_url.len,
-    );
+    const u_webview: *u_webview_t = .u_webview_create(view.u_view);
+
+    u_webview.u_webview_load_url( options.start_url.ptr, options.start_url.len);
 
     return .{
         .u_webview = u_webview,
@@ -50,18 +39,4 @@ pub fn free(self: *WebView) void {
 
 pub fn runJs(self: *WebView, js: []const u8) void {
     self.u_webview.u_webview_run_js(js.ptr, js.len);
-}
-
-/// The first time calling this will create the window to place dev tools into
-/// using the options provided. Subsequent calls will focus the existing window.
-pub fn openDevTools(self: *WebView) void {
-    // TODO: Should check platform and backend since mobile devices won't usually
-    // have dev tools support
-
-    self.u_webview.u_webview_open_dev_tools();
-}
-
-/// This will close dev tools and free the window it was attached to
-pub fn closeDevTools(self: *WebView) void {
-    self.u_webview.u_webview_close_dev_tools();
 }

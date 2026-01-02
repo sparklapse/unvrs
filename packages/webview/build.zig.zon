@@ -15,10 +15,8 @@
         .core = .{
             .path = "../core",
         },
-        // CEF builds
-        .cef_macos_aarch64 = .{
-            .url = "https://pub-a9ad101ece2949a1a2af86798d93d431.r2.dev/cef_binary_139.0.40%2Bg465474a%2Bchromium-139.0.7258.139_macosarm64_minimal.tar.gz",
-            .hash = "N-V-__8AAELiyxJTMEDvaJtsUiEl-BNVWnHyAuTkvVH71vBi",
+        .callback = .{
+            .path = "../callback",
         },
     },
     .paths = .{

@@ -316,6 +316,9 @@ const Header = struct {
             .void => {
                 return "void";
             },
+            .@"union" => {
+                // No C type conversion available
+            },
             else => {
                 std.debug.print("Unable to handle type '{s}' ({s})\n", .{ @typeName(T), @tagName(info) });
             },
